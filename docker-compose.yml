@@ -1,0 +1,26 @@
+version: '3' # Docker Compose dosyasının sürümünü belirtir
+
+services: # Servislerin tanımlandığı bölüm
+
+  zookeeper: # Zookeeper servisini tanımlar
+    image: confluentinc/cp-zookeeper:7.0.1 # Zookeeper için kullanılacak Docker imajı
+    container_name: zookeeper # Zookeeper konteyneri için isim
+    environment: # Zookeeper için ortam değişkenleri
+      ZOOKEEPER_CLIENT_PORT: 2181 # Zookeeper'ın dinleyeceği port
+      ZOOKEEPER_TICK_TIME: 2000 # Zookeeper için tick time (ms)
+
+  broker: # Kafka broker servisini tanımlar
+    image: confluentinc/cp-kafka:7.0.1 # Kafka için kullanılacak Docker imajı
+    container_name: broker # Kafka broker konteyneri için isim
+    ports: # Host ve konteyner arasındaki port eşlemeleri
+      - "9092:9092" # Kafka'nın host üzerinde 9092 portunu kullanarak dış dünyaya açılması
+    depends_on: # Bu servis başlatılmadan önce başlatılması gereken servisler
+      - zookeeper # Kafka broker, Zookeeper'a bağımlıdır ve ondan önce başlatılır
+    environment: # Kafka broker için ortam değişkenleri
+      KAFKA_BROKER_ID: 1 # Kafka broker'ın ID'si, benzersiz olmalı
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181' # Kafka'nın Zookeeper'a bağlanacağı adres ve port
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT # Listener güvenlik protokol haritası
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://broker:29092 # Kafka'nın advertise edeceği listener adresleri
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1 # Offsetler için replication factor
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1 # Transaction state log için minimum ISR (In-Sync Replicas)
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1 # Transaction state log için replication factor
